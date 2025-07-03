@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Phantom Connect Deeplink</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+  <h2>اتصال به کیف پول Phantom</h2>
+  <button id="connect">اتصال</button>
+
+  <div id="status" style="margin-top: 20px; font-size: 18px; color: darkblue;"></div>
+
+  <script>
+    // نمایش پیام در صفحه (نه کنسول)
+    function showStatus(message, color = 'darkblue') {
+      const el = document.getElementById('status');
+      el.textContent = message;
+      el.style.color = color;
+    }
+
+    // ساخت لینک اتصال
+    document.getElementById('connect').onclick = () => {
+      try {
+        const pubkey = 'DummyPublicKeyBase58'; // برای تست، کلید رمزگذاری تقلبی
+        const appUrl = encodeURIComponent(window.location.origin);
+        const redirect = encodeURIComponent(window.location.origin + '/?phantom=connected');
+
+        const params = [
+          `app_url=${appUrl}`,
+          `redirect_link=${redirect}`,
+          `dapp_encryption_public_key=${encodeURIComponent(pubkey)}`,
+          `cluster=devnet`
+        ].join('&');
+
+        const url = `https://phantom.app/ul/v1/connect?${params}`;
+        showStatus('در حال انتقال به کیف پول Phantom...');
+        window.location.href = url;
+      } catch (err) {
+        showStatus('❌ خطا هنگام ساخت لینک اتصال', 'crimson');
+      }
+    };
+
+    // بررسی برگشت از Phantom
+    window.onload = () => {
+      try {
+        const q = new URL(location).searchParams;
+        if (q.get('phantom') === 'connected') {
+          showStatus('✅ اتصال موفقیت‌آمیز بود!');
+        } else if (q.toString().includes('phantom')) {
+          showStatus('⚠️ برگشت از Phantom اما پارامتر مشخص نیست.');
+        }
+      } catch (err) {
+        showStatus('❌ خطا هنگام پردازش پاسخ برگشتی', 'crimson');
+      }
+    };
+  </script>
+</body>
+</html>
