@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>اتصال به کیف پول سولانا</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            color: #fff;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.6);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .wallet-status {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .status-text {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+
+        .status-connected {
+            color: #4ade80;
+            font-weight: 600;
+        }
+
+        .status-disconnected {
+            color: #f87171;
+            font-weight: 600;
+        }
+
+        .wallet-address {
+            color: #60a5fa;
+            font-size: 13px;
+            margin-top: 5px;
+            word-break: break-all;
+            font-family: monospace;
+        }
+
+        .balance {
+            color: #fbbf24;
+            font-size: 18px;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+
+        .wallet-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .wallet-btn {
+            padding: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wallet-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .wallet-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .wallet-btn .icon {
+            font-size: 28px;
+        }
+
+        .wallet-btn .badge {
+            font-size: 11px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 10px;
+            border-radius: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .wallet-btn.phantom {
+            border-color: rgba(114, 94, 255, 0.3);
+        }
+
+        .wallet-btn.phantom:hover:not(:disabled) {
+            border-color: #725eff;
+            box-shadow: 0 0 20px rgba(114, 94, 255, 0.2);
+        }
+
+        .wallet-btn.solflare {
+            border-color: rgba(255, 107, 53, 0.3);
+        }
+
+        .wallet-btn.solflare:hover:not(:disabled) {
+            border-color: #ff6b35;
+            box-shadow: 0 0 20px rgba(255, 107, 53, 0.2);
+        }
+
+        .wallet-btn .check {
+            display: none;
+            color: #4ade80;
+            font-size: 16px;
+        }
+
+        .wallet-btn.active {
+            border-color: #4ade80 !important;
+            background: rgba(74, 222, 128, 0.1);
+        }
+
+        .wallet-btn.active .check {
+            display: inline;
+        }
+
+        .disconnect-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 16px;
+            background: rgba(248, 113, 113, 0.15);
+            color: #f87171;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            border: 1px solid rgba(248, 113, 113, 0.2);
+        }
+
+        .disconnect-btn:hover:not(:disabled) {
+            background: rgba(248, 113, 113, 0.25);
+            border-color: rgba(248, 113, 113, 0.4);
+        }
+
+        .disconnect-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 90%;
+            text-align: center;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-color: #4ade80;
+        }
+
+        .toast.error {
+            border-color: #f87171;
+        }
+
+        .toast.info {
+            border-color: #60a5fa;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .device-info {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 11px;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+
+            .wallet-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
+            .wallet-btn {
+                padding: 12px;
+                font-size: 13px;
+            }
+
+            .wallet-btn .icon {
+                font-size: 22px;
+            }
+
+            h1 {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🔗 اتصال به سولانا</h1>
+        <p class="subtitle">اتصال به کیف پول در دسکتاپ و موبایل</p>
+
+        <!-- وضعیت اتصال -->
+        <div class="wallet-status" id="walletStatus">
+            <span class="status-text status-disconnected" id="statusText">🔴 عدم اتصال</span>
+            <div class="wallet-address" id="walletAddress"></div>
+            <div class="balance" id="balanceDisplay">—</div>
+        </div>
+
+        <!-- دکمه‌های کیف پول -->
+        <div class="wallet-grid">
+            <button class="wallet-btn phantom" id="phantomBtn" data-wallet="phantom">
+                <span class="icon">👻</span>
+                <span>فانتوم</span>
+                <span class="badge">Phantom</span>
+                <span class="check">✅</span>
+            </button>
+
+            <button class="wallet-btn solflare" id="solflareBtn" data-wallet="solflare">
+                <span class="icon">🔥</span>
+                <span>سولفلر</span>
+                <span class="badge">Solflare</span>
+                <span class="check">✅</span>
+            </button>
+        </div>
+
+        <!-- دکمه قطع اتصال -->
+        <button class="disconnect-btn" id="disconnectBtn" disabled>
+            🔌 قطع اتصال
+        </button>
+
+        <div class="device-info" id="deviceInfo">
+            📱 در حال تشخیص دستگاه...
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <!-- اضافه کردن Solana Web3.js از CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.78.0/lib/index.iife.min.js">
+    </script>
+
+    <script>
+        // =============================================
+        // کلاس اصلی مدیریت کیف پول
+        // =============================================
+        class SolanaWalletManager {
+            constructor() {
+                this.wallet = null;
+                this.publicKey = null;
+                this.walletType = null; // 'phantom' | 'solflare'
+                this.connection = null;
+                this.isMobile = this.detectMobile();
+                this.isConnecting = false;
+
+                // عناصر DOM
+                this.elements = {
+                    statusText: document.getElementById('statusText'),
+                    walletAddress: document.getElementById('walletAddress'),
+                    balanceDisplay: document.getElementById('balanceDisplay'),
+                    phantomBtn: document.getElementById('phantomBtn'),
+                    solflareBtn: document.getElementById('solflareBtn'),
+                    disconnectBtn: document.getElementById('disconnectBtn'),
+                    deviceInfo: document.getElementById('deviceInfo'),
+                    toast: document.getElementById('toast'),
+                    walletStatus: document.getElementById('walletStatus'),
+                };
+
+                // تنظیم RPC (می‌توانید از RPC خودتان استفاده کنید)
+                this.rpcEndpoint = 'https://api.mainnet-beta.solana.com';
+                // برای تست از devnet استفاده کنید:
+                // this.rpcEndpoint = 'https://api.devnet.solana.com';
+
+                this.init();
+            }
+
+            // =============================================
+            // تشخیص موبایل یا دسکتاپ
+            // =============================================
+            detectMobile() {
+                const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+                const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+                userAgent.toLowerCase());
+                const isMobileTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+                return isMobile || isMobileTouch;
+            }
+
+            // =============================================
+            // مقداردهی اولیه
+            // =============================================
+            init() {
+                this.updateDeviceInfo();
+                this.loadSavedState();
+                this.setupEventListeners();
+
+                // گوش دادن به تغییرات اتصال در افزونه‌ها
+                if (window.solana) {
+                    window.solana.on('connect', () => this.handleWalletConnect('phantom'));
+                    window.solana.on('disconnect', () => this.handleDisconnect());
+                }
+
+                if (window.solflare) {
+                    // Solflare از event پشتیبانی می‌کند
+                    window.solflare.on('connect', () => this.handleWalletConnect('solflare'));
+                    window.solflare.on('disconnect', () => this.handleDisconnect());
+                }
+
+                // گوش دادن به تغییرات در localStorage (برای همگام‌سازی بین تب‌ها)
+                window.addEventListener('storage', (e) => {
+                    if (e.key === 'solanaWalletState') {
+                        this.loadSavedState();
+                    }
+                });
+
+                console.log(`✅ Wallet Manager initialized (${this.isMobile ? 'Mobile' : 'Desktop'})`);
+            }
+
+            // =============================================
+            // ذخیره و بازیابی وضعیت
+            // =============================================
+            saveState() {
+                const state = {
+                    publicKey: this.publicKey,
+                    walletType: this.walletType,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem('solanaWalletState', JSON.stringify(state));
+            }
+
+            loadSavedState() {
+                try {
+                    const saved = localStorage.getItem('solanaWalletState');
+                    if (saved) {
+                        const state = JSON.parse(saved);
+                        // بررسی اینکه اطلاعات قدیمی نباشد (مثلاً 24 ساعت)
+                        if (Date.now() - state.timestamp < 86400000) {
+                            this.publicKey = state.publicKey;
+                            this.walletType = state.walletType;
+                            if (this.publicKey) {
+                                this.updateUI(true);
+                                this.getBalance();
+                            }
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Error loading saved state:', e);
+                }
+                // اگر ذخیره‌ای نبود یا منقضی شده بود
+                this.clearState();
+            }
+
+            clearState() {
+                this.publicKey = null;
+                this.walletType = null;
+                this.wallet = null;
+                localStorage.removeItem('solanaWalletState');
+                this.updateUI(false);
+            }
+
+            // =============================================
+            // تشخیص وجود کیف پول
+            // =============================================
+            isPhantomAvailable() {
+                // بررسی در دسکتاپ (افزونه) و موبایل (Web3)
+                if (window.solana?.isPhantom) return true;
+                // در موبایل ممکن است از طریق WalletConnect یا DeepLink باشد
+                if (this.isMobile) {
+                    // بررسی وجود اپلیکیشن از طریق deep link
+                    return true; // فرض می‌کنیم نصب است
+                }
+                return false;
+            }
+
+            isSolflareAvailable() {
+                if (window.solflare) return true;
+                if (this.isMobile) {
+                    return true; // فرض می‌کنیم نصب است
+                }
+                return false;
+            }
+
+            // =============================================
+            // اتصال به کیف پول
+            // =============================================
+            async connectPhantom() {
+                if (this.isConnecting) return;
+                this.isConnecting = true;
+                this.showToast('در حال اتصال به فانتوم...', 'info');
+
+                try {
+                    // بررسی وجود افزونه
+                    if (!window.solana?.isPhantom) {
+                        if (this.isMobile) {
+                            // در موبایل با deep link باز می‌کنیم
+                            this.openPhantomMobile();
+                            return;
+                        }
+                        this.showToast('لطفاً افزونه Phantom را نصب کنید', 'error');
+                        this.isConnecting = false;
+                        return;
+                    }
+
+                    // اتصال به افزونه
+                    const resp = await window.solana.connect({
+                        onlyIfTrusted: false
+                    });
+
+                    this.wallet = window.solana;
+                    this.publicKey = resp.publicKey.toString();
+                    this.walletType = 'phantom';
+                    this.saveState();
+                    this.updateUI(true);
+                    this.getBalance();
+                    this.showToast('✅ با موفقیت به فانتوم متصل شدید', 'success');
+
+                } catch (error) {
+                    console.error('Phantom connection error:', error);
+                    if (error.code === 4001) {
+                        this.showToast('❌ اتصال توسط کاربر رد شد', 'error');
+                    } else {
+                        this.showToast('❌ خطا در اتصال به فانتوم', 'error');
+                    }
+                } finally {
+                    this.isConnecting = false;
+                }
+            }
+
+            async connectSolflare() {
+                if (this.isConnecting) return;
+                this.isConnecting = true;
+                this.showToast('در حال اتصال به سولفلر...', 'info');
+
+                try {
+                    // بررسی وجود افزونه
+                    if (!window.solflare) {
+                        if (this.isMobile) {
+                            this.openSolflareMobile();
+                            return;
+                        }
+                        this.showToast('لطفاً افزونه Solflare را نصب کنید', 'error');
+                        this.isConnecting = false;
+                        return;
+                    }
+
+                    // اتصال به افزونه
+                    await window.solflare.connect();
+
+                    this.wallet = window.solflare;
+                    this.publicKey = window.solflare.publicKey.toString();
+                    this.walletType = 'solflare';
+                    this.saveState();
+                    this.updateUI(true);
+                    this.getBalance();
+                    this.showToast('✅ با موفقیت به سولفلر متصل شدید', 'success');
+
+                } catch (error) {
+                    console.error('Solflare connection error:', error);
+                    this.showToast('❌ خطا در اتصال به سولفلر', 'error');
+                } finally {
+                    this.isConnecting = false;
+                }
+            }
+
+            // =============================================
+            // اتصال در موبایل (Deep Links)
+            // =============================================
+            openPhantomMobile() {
+                // لینک مستقیم به اپلیکیشن فانتوم
+                const deepLink = 'phantom://browse';
+                const appStoreLink = 'https://phantom.app/download';
+                const playStoreLink = 'https://play.google.com/store/apps/details?id=app.phantom';
+
+                // تلاش برای باز کردن اپلیکیشن
+                const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+                const isAndroid = /Android/i.test(navigator.userAgent);
+
+                if (isIOS) {
+                    window.location.href = deepLink;
+                    // اگر باز نشد، به App Store می‌رویم
+                    setTimeout(() => {
+                        window.location.href = appStoreLink;
+                    }, 2000);
+                } else if (isAndroid) {
+                    window.location.href = deepLink;
+                    setTimeout(() => {
+                        window.location.href = playStoreLink;
+                    }, 2000);
+                } else {
+                    this.showToast('لطفاً اپلیکیشن Phantom را نصب کنید', 'info');
+                }
+
+                this.showToast('📱 در حال باز کردن اپلیکیشن فانتوم...', 'info');
+                this.isConnecting = false;
+            }
+
+            openSolflareMobile() {
+                const deepLink = 'solflare://';
+                const appStoreLink = 'https://apps.apple.com/us/app/solflare-solana-wallet/id1588635051';
+                const playStoreLink = 'https://play.google.com/store/apps/details?id=com.solflare.mobile';
+
+                const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+                const isAndroid = /Android/i.test(navigator.userAgent);
+
+                if (isIOS) {
+                    window.location.href = deepLink;
+                    setTimeout(() => {
+                        window.location.href = appStoreLink;
+                    }, 2000);
+                } else if (isAndroid) {
+                    window.location.href = deepLink;
+                    setTimeout(() => {
+                        window.location.href = playStoreLink;
+                    }, 2000);
+                } else {
+                    this.showToast('لطفاً اپلیکیشن Solflare را نصب کنید', 'info');
+                }
+
+                this.showToast('📱 در حال باز کردن اپلیکیشن سولفلر...', 'info');
+                this.isConnecting = false;
+            }
+
+            // =============================================
+            // قطع اتصال
+            // =============================================
+            async disconnect() {
+                try {
+                    if (this.wallet && this.wallet.disconnect) {
+                        await this.wallet.disconnect();
+                    }
+                } catch (e) {
+                    console.warn('Disconnect error:', e);
+                }
+
+                this.clearState();
+                this.showToast('🔌 اتصال قطع شد', 'info');
+            }
+
+            // =============================================
+            // دریافت موجودی
+            // =============================================
+            async getBalance() {
+                if (!this.publicKey) return;
+
+                try {
+                    const connection = new solanaWeb3.Connection(this.rpcEndpoint, 'confirmed');
+                    const pubKey = new solanaWeb3.PublicKey(this.publicKey);
+                    const balance = await connection.getBalance(pubKey);
+
+                    const solBalance = (balance / solanaWeb3.LAMPORTS_PER_SOL).toFixed(4);
+                    this.elements.balanceDisplay.textContent = `${solBalance} SOL`;
+                    this.elements.balanceDisplay.style.color = '#fbbf24';
+                } catch (error) {
+                    console.error('Balance fetch error:', error);
+                    this.elements.balanceDisplay.textContent = '⚠️ خطا در دریافت موجودی';
+                    this.elements.balanceDisplay.style.color = '#f87171';
+                }
+            }
+
+            // =============================================
+            // به‌روزرسانی UI
+            // =============================================
+            updateUI(connected) {
+                const { statusText, walletAddress, balanceDisplay, phantomBtn, solflareBtn, disconnectBtn } = this.elements;
+
+                if (connected && this.publicKey) {
+                    statusText.className = 'status-text status-connected';
+                    statusText.textContent = '🟢 متصل';
+                    walletAddress.textContent = `📍 ${this.publicKey.slice(0, 6)}...${this.publicKey.slice(-6)}`;
+                    walletAddress.style.display = 'block';
+                    disconnectBtn.disabled = false;
+
+                    // فعال کردن دکمه کیف پول مربوطه
+                    if (this.walletType === 'phantom') {
+                        phantomBtn.classList.add('active');
+                        solflareBtn.classList.remove('active');
+                        phantomBtn.disabled = true;
+                        solflareBtn.disabled = false;
+                    } else if (this.walletType === 'solflare') {
+                        solflareBtn.classList.add('active');
+                        phantomBtn.classList.remove('active');
+                        solflareBtn.disabled = true;
+                        phantomBtn.disabled = false;
+                    }
+
+                    // تغییر رنگ status
+                    this.elements.walletStatus.style.borderColor = 'rgba(74, 222, 128, 0.3)';
+
+                } else {
+                    statusText.className = 'status-text status-disconnected';
+                    statusText.textContent = '🔴 عدم اتصال';
+                    walletAddress.textContent = '';
+                    walletAddress.style.display = 'none';
+                    balanceDisplay.textContent = '—';
+                    disconnectBtn.disabled = true;
+
+                    phantomBtn.classList.remove('active');
+                    solflareBtn.classList.remove('active');
+                    phantomBtn.disabled = false;
+                    solflareBtn.disabled = false;
+
+                    this.elements.walletStatus.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                }
+            }
+
+            // =============================================
+            // اطلاعات دستگاه
+            // =============================================
+            updateDeviceInfo() {
+                const info = this.elements.deviceInfo;
+                const platform = this.isMobile ? '📱 موبایل' : '💻 دسکتاپ';
+                const os = this.getOS();
+                const browser = this.getBrowser();
+                info.textContent = `${platform} | ${os} | ${browser}`;
+            }
+
+            getOS() {
+                const ua = navigator.userAgent;
+                if (/Android/i.test(ua)) return 'Android';
+                if (/iPhone|iPad|iPod/i.test(ua)) return 'iOS';
+                if (/Windows/i.test(ua)) return 'Windows';
+                if (/Mac OS/i.test(ua)) return 'macOS';
+                if (/Linux/i.test(ua)) return 'Linux';
+                return 'Unknown';
+            }
+
+            getBrowser() {
+                const ua = navigator.userAgent;
+                if (/Chrome/i.test(ua) && !/Edge/i.test(ua)) return 'Chrome';
+                if (/Firefox/i.test(ua)) return 'Firefox';
+                if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) return 'Safari';
+                if (/Edge/i.test(ua)) return 'Edge';
+                return 'Unknown';
+            }
+
+            // =============================================
+            // Toast Notification
+            // =============================================
+            showToast(message, type = 'info') {
+                const toast = this.elements.toast;
+                toast.textContent = message;
+                toast.className = `toast show ${type}`;
+
+                clearTimeout(this.toastTimeout);
+                this.toastTimeout = setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 4000);
+            }
+
+            // =============================================
+            // Event Listeners
+            // =============================================
+            setupEventListeners() {
+                this.elements.phantomBtn.addEventListener('click', () => {
+                    this.connectPhantom();
+                });
+
+                this.elements.solflareBtn.addEventListener('click', () => {
+                    this.connectSolflare();
+                });
+
+                this.elements.disconnectBtn.addEventListener('click', () => {
+                    this.disconnect();
+                });
+
+                // اگر کاربر روی دکمه‌های موبایل کلیک کند
+                if (this.isMobile) {
+                    // راهنمایی برای بازگشت به سایت بعد از اتصال در اپلیکیشن
+                    document.addEventListener('visibilitychange', () => {
+                        if (document.visibilityState === 'visible') {
+                            // وقتی کاربر از اپلیکیشن به سایت برگشت
+                            this.checkMobileConnection();
+                        }
+                    });
+                }
+            }
+
+            // =============================================
+            // بررسی اتصال در موبایل بعد از برگشت از اپلیکیشن
+            // =============================================
+            async checkMobileConnection() {
+                // در موبایل، بعد از برگشت از اپلیکیشن، وضعیت را چک می‌کنیم
+                if (this.isMobile && !this.publicKey) {
+                    // بررسی مجدد وجود کیف پول
+                    if (window.solana?.isPhantom && window.solana.publicKey) {
+                        this.publicKey = window.solana.publicKey.toString();
+                        this.walletType = 'phantom';
+                        this.wallet = window.solana;
+                        this.saveState();
+                        this.updateUI(true);
+                        this.getBalance();
+                        this.showToast('✅ اتصال برقرار شد!', 'success');
+                    } else if (window.solflare && window.solflare.publicKey) {
+                        this.publicKey = window.solflare.publicKey.toString();
+                        this.walletType = 'solflare';
+                        this.wallet = window.solflare;
+                        this.saveState();
+                        this.updateUI(true);
+                        this.getBalance();
+                        this.showToast('✅ اتصال برقرار شد!', 'success');
+                    }
+                }
+            }
+
+            // =============================================
+            // هندلرهای رویداد
+            // =============================================
+            handleWalletConnect(type) {
+                if (type === 'phantom' && window.solana?.publicKey) {
+                    this.publicKey = window.solana.publicKey.toString();
+                    this.walletType = 'phantom';
+                    this.wallet = window.solana;
+                } else if (type === 'solflare' && window.solflare?.publicKey) {
+                    this.publicKey = window.solflare.publicKey.toString();
+                    this.walletType = 'solflare';
+                    this.wallet = window.solflare;
+                }
+                this.saveState();
+                this.updateUI(true);
+                this.getBalance();
+                this.showToast('✅ اتصال برقرار شد!', 'success');
+            }
+
+            handleDisconnect() {
+                this.clearState();
+                this.showToast('🔌 اتصال قطع شد', 'info');
+            }
+        }
+
+        // =============================================
+        // راه‌اندازی برنامه
+        // =============================================
+        document.addEventListener('DOMContentLoaded', () => {
+            const walletManager = new SolanaWalletManager();
+
+            // قرار دادن در معرض global برای دیباگ
+            window.walletManager = walletManager;
+        });
+    </script>
+
+</body>
+</html>
